@@ -2,10 +2,9 @@
 /** @jsx React.DOM */
 var React = require('react');
 var App = require('./src/main-app');
-console.log('main loaded');
 React.renderComponent( App( {width:100, height:20} ) , document.getElementById('wrapper'));
 
-},{"./src/main-app":165,"react":160}],2:[function(require,module,exports){
+},{"./src/main-app":166,"react":160}],2:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -20487,6 +20486,7 @@ module.exports = {
  */
 
 var React = require('react/addons');
+var Cell = require('./game-single-cell');
 var Field = React.createClass({displayName: 'Field',
         mixins: [require('./game-core-mixin')],
         getGameInstance: function(){
@@ -20496,39 +20496,65 @@ var Field = React.createClass({displayName: 'Field',
           return this.getGameInstance().cycleXY(x, y);
         },
         render: function() {
-          var self = this;
-            var colors = {
-                'alive': '#00FF00',
-                'dead': '#FF0000',
-                'occupied': '#CCCCCC',
-                'empty': '#AAAAAA'
-            };
-            var formCellRow = (function formCellRow(maxX, currentY, cells) {
-              return Array.apply(null, {length: maxX})
-                .map(function(v,x){
-                  return React.DOM.td(
-                            {onClick:self.cycleState.bind(self, x, currentY),
-                            key:x,
-                            style:{backgroundColor: colors[cells[x + currentY * maxX].state]}}
-                          )
-                });
-            }).bind(this)
+          var formCellRow = (function formCellRow(maxX, currentY, cells) {
+            var row = [];
+            for (var x = 0; x < maxX; x++) {
+              row.push(Cell(
+                          {onClick:this.cycleState.bind(this, x, currentY),
+                          key:x,
+                          state:cells[x + currentY * maxX].state}
+                        ))
+            }
+            return row;
+          }).bind(this)
 
-            var formRows = (function formRows(maxX, maxY, cells) {
-              return Array.apply(null, {length: maxY})
-                .map(function(v,y){return React.DOM.tr( {key:y}, formCellRow(maxX, y, cells))})
-            }).bind(this)
-            var game = this.getGameInstance();
-            return React.DOM.table(null, 
+          var formRows = (function formRows(maxX, maxY, cells) {
+            var rows = []
+            for (var y = 0; y < maxY; y++) {
+              rows.push(React.DOM.tr( {key:y}, formCellRow(maxX, y, cells)))
+            }
+            return rows;
+          }).bind(this)
+          var game = this.getGameInstance();
+          return React.DOM.table(null, 
                   React.DOM.tbody(null, 
-                  formRows(game.width, game.height, game.cells)
+                    formRows(game.width, game.height, game.cells)
                   )
                 )
   }
 })
 module.exports = Field
 
-},{"./game-core-mixin":163,"react/addons":11}],165:[function(require,module,exports){
+},{"./game-core-mixin":163,"./game-single-cell":165,"react/addons":11}],165:[function(require,module,exports){
+/**
+ * @jsx React.DOM
+ */
+
+var React = require('react');
+
+var colors = {
+  'alive': '#00FF00',
+  'dead': '#FF0000',
+  'occupied': '#CCCCCC',
+  'empty': '#AAAAAA'
+};
+var Cell = React.createClass({displayName: 'Cell',
+  shouldComponentUpdate: function(nextProps, nextState){
+    return this.props.state !== nextProps.state;
+  },
+  render: function() {
+    return (
+      React.DOM.td(
+        {onClick:this.props.onClick,
+        style:{backgroundColor: colors[this.props.state]}}
+      )
+    );
+  }
+
+});
+
+module.exports = Cell;
+},{"react":160}],166:[function(require,module,exports){
 /**
  * @jsx React.DOM
  */
